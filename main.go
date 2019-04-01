@@ -2,35 +2,20 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"regexp"
 	"strings"
-
-	"github.com/gorilla/mux"
 )
 
 func main() {
 	//Command-line flags
-	port := flag.String("p", "3000", "port to serve on")
-	flag.Parse()
-
-	router := mux.NewRouter()
-
-	// Handle API routes
-	api := router.PathPrefix("/api").Subrouter()
-	api.HandleFunc("/", testHandle).Methods("GET")
-
-	// Serve static files from public directory
-	router.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("./public/"))))
+	//port := flag.String("p", "3000", "port to serve on")
+	//flag.Parse()
 
 	checkFile("example.js")
-
-	log.Println("Starting server on port " + *port)
-	//log.Fatal(http.ListenAndServe(":"+*port, router))
 
 }
 
@@ -39,7 +24,7 @@ func testHandle(w http.ResponseWriter, r *http.Request) {
 }
 
 func checkFile(filename string) {
-	extension := strings.Split(filename, ".")[1]
+	extension := getFileExtension(filename)
 
 	regexpFile, err := ioutil.ReadFile("rules/" + extension + ".rule")
 	if err != nil {
@@ -53,12 +38,15 @@ func checkFile(filename string) {
 		return
 	}
 
-	log.Println(findLine(content, 21))
 	re := regexp.MustCompile(string(regexpFile))
-	log.Println(re.FindAllIndex([]byte(content), -1))
-	log.Println(re.FindAllStringIndex(string(content), -1))
+	matches := re.FindAllIndex(content, -1)
+	for i := 0; i < len(matches); i++ {
+		line := findLine(content, matches[i][0])
+		log.Printf("Warning! Found rule on line: %d", line)
+	}
 }
 
+//Finds the line of a given index in a string
 func findLine(str []byte, index int) int {
 	cont := 1
 	for i := 0; i < index; i++ {
@@ -67,4 +55,19 @@ func findLine(str []byte, index int) int {
 		}
 	}
 	return cont
+}
+
+//Gets the file extension from a filename
+func getFileExtension(filename string) string {
+	return strings.Split(filename, ".")[1]
+}
+
+//Reads a file content
+func readFileContent(filePath string) ([]byte, error) {
+	fileRead, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		log.Print(err)
+		return []byte(""), err
+	}
+	return fileRead, nil
 }
