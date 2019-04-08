@@ -65,7 +65,7 @@ func ruleParser(filePath string) []rule {
 		}
 		parsedRules = append(parsedRules, newRule)
 	}
-
+	
 	return parsedRules
 }
 

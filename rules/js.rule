@@ -1,1 +1,2 @@
 regex=  ==  level= 0 msg= Non-explicit type variable comparison
+regex= (?s)(?:\$.ajax\().{0,400}async:\s?false[,]? level= 0 msg= Synchronous ajax call
